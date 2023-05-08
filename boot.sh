@@ -3,7 +3,6 @@
 # Charger les variables d'environnement à partir du fichier .env
 source .env
 
-
 # Configure AWS CLI
 aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
 aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
@@ -12,9 +11,7 @@ aws configure set output json
 
 echo "AWS CLI configuration completed."
 
-
 ######################## BDD ##############################################
-
 
 # Créer la base de données RDS et la table
 aws rds create-db-instance --db-instance-identifier mydbinstance \
@@ -55,8 +52,6 @@ aws rds create-db-instance-automated-backup --db-instance-identifier mydbinstanc
 aws rds create-db-snapshot --db-instance-identifier mydbinstance \
 --db-snapshot-identifier mydbsnapshot
 
-
-
 # Inserer des données dans la base de données
 
 # variable db_instance
@@ -78,15 +73,9 @@ INSERT INTO users (name, email) VALUES ('Jane Doe', 'janedoe@example.com');
 INSERT INTO users (name, email) VALUES ('Bob Smith', 'bobsmith@example.com');
 EOF
 
-
-
 ########################## BUCKET ######################################################
 
-
 aws s3api create-bucket --bucket $S3_BUCKET --region $REGION
-
-
-
 
 ######################### IAM ROLLE #####################################
 
@@ -98,11 +87,7 @@ aws iam attach-role-policy \
     --role-name my-lambda-role \
     --policy-arn arn:aws:iam::aws:policy/AmazonRDSDataFullAccess
 
-
-
-
 ######################### PUSH LAMBDA FUNCTION INTO BUCKET ############################
-
 
 # Définir le nom du fichier à envoyer
 filename="lambda_handler.py"
@@ -116,19 +101,13 @@ aws s3api put-object --bucket $S3_BUCKET --key lambdas/ --metadata x-amz-meta-mk
 # Envoyer le fichier vers le bucket S3
 aws s3 cp lambda_handler.py s3://$S3_BUCKET/lambdas/
 
-
 ######################## LAMBDA #######################################################
 
-
 VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=my-vpc" --query 'Vpcs[0].VpcId' --output text)
-
-
 
 subnet_ids=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=VPC_ID" --query "Subnets[].SubnetId" --output text)
 
 security_group_ids=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=VPC_ID" --query "SecurityGroups[].GroupId" --output text)
-
-
 
 aws lambda create-function \
     --function-name my-function \
@@ -144,9 +123,6 @@ aws lambda create-function \
 lambda_arn=$(aws lambda get-function --function-name my-function --query 'Configuration.FunctionArn' --output text)
 
 #################### PERMISSIONS #######################################################
-
-
-
 
 aws lambda add-permission \
     --function-name my-function \
@@ -164,15 +140,8 @@ aws lambda add-permission \
     --source-arn arn:aws:rds:us-west-2:123456789012:db:mydbinstance \
     --source-account 123456789012
 
-
 ############# TRIGGER #########################################################
 
 aws events put-rule --name my-rule --schedule-expression "rate(24 hours)"
 
 aws events put-targets --rule my-rule --targets "Id"="1","Arn"=$lambda_arn
-
-
-
-
-
-
